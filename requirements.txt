@@ -1,0 +1,6 @@
+flask
+pandas
+flask-mysql
+openpyxl
+numpy
+flask-cors

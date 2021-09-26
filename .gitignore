@@ -1,0 +1,8 @@
+venv/
+
+Backend/__pycache__
+Backend/candidateList.xlsx
+Backend/voterList.xlsx
+Backend/pwdFile.xlsx
+
+Frontend/sac-election/node_modules
