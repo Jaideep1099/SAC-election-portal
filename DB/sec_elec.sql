@@ -57,7 +57,7 @@ SET @saved_cs_client     = @@character_set_client;
 /* 1 AS `DEPT`,
 /* 1 AS `POSITION`,
 /* 1 AS `PROG`,
-/* 1 AS `ROLLNO`,
+/* 1 AS `ROLLNO`, 
 /* 1 AS `VOTES`*/;
 SET character_set_client = @saved_cs_client;
 
