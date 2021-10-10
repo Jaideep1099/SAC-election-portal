@@ -32,7 +32,7 @@ CREATE TABLE `CANDIDATES` (
   PRIMARY KEY (`ROLLNO`),
   UNIQUE KEY `NAME` (`NAME`,`DEPT`,`POSITION`,`PROG`),
   CONSTRAINT `CANDIDATES_ibfk_1` FOREIGN KEY (`ROLLNO`) REFERENCES `USER` (`ROLLNO`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -53,12 +53,12 @@ DROP TABLE IF EXISTS `GENSEC`;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `GENSEC` AS SELECT 
- 1 AS `NAME`,
- 1 AS `DEPT`,
- 1 AS `POSITION`,
- 1 AS `PROG`,
- 1 AS `ROLLNO`,
- 1 AS `VOTES`*/;
+/* 1 AS `NAME`,
+/* 1 AS `DEPT`,
+/* 1 AS `POSITION`,
+/* 1 AS `PROG`,
+/* 1 AS `ROLLNO`,
+/* 1 AS `VOTES`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -73,7 +73,7 @@ CREATE TABLE `SESSION` (
   `TOKEN` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`ROLLNO`),
   CONSTRAINT `SESSION_ibfk_1` FOREIGN KEY (`ROLLNO`) REFERENCES `USER` (`ROLLNO`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -94,12 +94,12 @@ DROP TABLE IF EXISTS `SPORTSEC`;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `SPORTSEC` AS SELECT 
- 1 AS `NAME`,
- 1 AS `DEPT`,
- 1 AS `POSITION`,
- 1 AS `PROG`,
- 1 AS `ROLLNO`,
- 1 AS `VOTES`*/;
+/* 1 AS `NAME`,
+/* 1 AS `DEPT`,
+/* 1 AS `POSITION`,
+/* 1 AS `PROG`,
+/* 1 AS `ROLLNO`,
+/* 1 AS `VOTES`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -116,7 +116,7 @@ CREATE TABLE `USER` (
   `VOTED` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`ROLLNO`),
   UNIQUE KEY `EMAIL` (`EMAIL`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -139,7 +139,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`debian-sys-maint`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `GENSEC` AS select `CANDIDATES`.`NAME` AS `NAME`,`CANDIDATES`.`DEPT` AS `DEPT`,`CANDIDATES`.`POSITION` AS `POSITION`,`CANDIDATES`.`PROG` AS `PROG`,`CANDIDATES`.`ROLLNO` AS `ROLLNO`,`CANDIDATES`.`VOTES` AS `VOTES` from `CANDIDATES` where (`CANDIDATES`.`POSITION` = 'General Secretary') */;
@@ -157,7 +157,7 @@ UNLOCK TABLES;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
 /*!50001 SET character_set_client      = utf8mb4 */;
 /*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`debian-sys-maint`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `SPORTSEC` AS select `CANDIDATES`.`NAME` AS `NAME`,`CANDIDATES`.`DEPT` AS `DEPT`,`CANDIDATES`.`POSITION` AS `POSITION`,`CANDIDATES`.`PROG` AS `PROG`,`CANDIDATES`.`ROLLNO` AS `ROLLNO`,`CANDIDATES`.`VOTES` AS `VOTES` from `CANDIDATES` where (`CANDIDATES`.`POSITION` = 'Sports Secretary') */;
