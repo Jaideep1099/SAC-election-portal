@@ -1,10 +1,14 @@
-import random
+from flask import Flask, request, render_template, Response
+from flaskext.mysql import MySQL
+from flask_cors import CORS
+
 import pandas as pd
 import numpy as np
+import random
+import time
 import json
-from flask import Flask, request, render_template, Response
-from flask_cors import CORS
-from flaskext.mysql import MySQL
+import sys
+import re
 
 from config import *
 from enroll import *
@@ -20,6 +24,48 @@ mysql.init_app(app)
 
 cors = CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+def reset_db():
+    sql_file = '../DB/sec_elec.sql'
+    print(f"[INFO] Executing SQL script file: {sql_file}")
+    statement = ""
+
+    for line in open(sql_file):
+        line = line.strip()
+        # print(f'[LINE] {line}')
+        # print('[--]',re.match(r'--', line))
+        if re.match(r'--', line):
+            continue
+        # print('[/*/]',re.match(r'/*/', line))
+        if re.match(r'/', line):
+            continue
+        # print('[HERE]')
+        if not re.search(r';', line):  # keep appending lines that don't end in ';'
+            statement = statement + line
+        else:  # when you get a line ending in ';' then exec statement and reset for next statement
+            statement = statement + line
+            # print(f"[DEBUG] Executing SQL statement:\n{statement}")
+            try:
+                cursor.execute(statement)
+            except Exception as e:
+                # print(f"[ERROR] Failed to execute SQL statement:\n{statement}")
+                # print(f"[WARN] MySQLError during execute statement \n\tArgs: {str(e.args)}")
+                pass
+            statement = ""
+
+args = sys.argv[1:]
+if len(args) > 0 and args[0] == "reset_db":
+    print(f"[INFO] Resetting database...")
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    reset_db()
+    time.sleep(1)
+    reset_db()
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(f"[INFO] Database reset complete.")
+    exit(0)
 
 # cursor.execute("SELECT * from USER")
 # data = cursor.fetchone()
@@ -41,6 +87,7 @@ def login():
     cursor.execute("SELECT COUNT(*) FROM USER WHERE ROLLNO = %s AND PWD = %s",(uname, hashed_pwd))
     res = cursor.fetchone()
     
+    # print(res)
     
     if res[0] == 1:
         token = str(random.randint(100000, 999999)) + uname
