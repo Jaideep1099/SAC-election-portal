@@ -54,63 +54,37 @@ function AdminPage(props) {
             <button class="btn btn-primary btn-sm" onClick={fetchResults}> Show Results </button>
             {result === null ? null
                 :
-                <div>
-                    <h3> General Secretary </h3>
-                    <table class="table table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">Rank</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Roll No</th>
-                                <th scope="col">Department</th>
-                                <th scope="col">Program</th>
-                                <th scope="col">Votes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {result['gensec'].map((cand, ind) =>
-                                <tr key={ind}>
-                                    <th scope="row">{ind + 1}</th>
-                                    <td>{cand['name']}</td>
-                                    <td>{cand['rollno']}</td>
-                                    <td>{cand['dept']}</td>
-                                    <td>{cand['program']}</td>
-                                    <td>{cand['votes']}</td>
+                Object.keys(result).map((pos, ind) => (
+                    <div key={ind}>
+                        <h3>{pos}</h3>
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Rank</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Roll No</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Program</th>
+                                    <th scope="col">Votes</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                    <h3> Sports Secretary </h3>
-                    <table class="table table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">Rank</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Roll No</th>
-                                <th scope="col">Department</th>
-                                <th scope="col">Program</th>
-                                <th scope="col">Votes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {result['sportsec'].map((cand, ind) =>
-
-                                <tr key={ind}>
-                                    <th scope="row">{ind + 1}</th>
-                                    <td>{cand['name']}</td>
-                                    <td>{cand['rollno']}</td>
-                                    <td>{cand['dept']}</td>
-                                    <td>{cand['program']}</td>
-                                    <td>{cand['votes']}</td>
-                                </tr>
-
-                            )}
-                        </tbody>
-                    </table>
-                </div>}
-
-
-        </div>
+                            </thead>
+                            <tbody>
+                                {result[pos].map((cand, ind) =>
+                                    <tr key={ind}>
+                                        <th scope="row">{ind + 1}</th>
+                                        <td>{cand['name']}</td>
+                                        <td>{cand['rollno']}</td>
+                                        <td>{cand['dept']}</td>
+                                        <td>{cand['program']}</td>
+                                        <td>{cand['votes']}</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                ))
+            }
+        </div >
     );
 }
 

@@ -147,8 +147,12 @@ def cast_vote():
 
             cursor.execute("UPDATE USER SET VOTED = 1 WHERE ROLLNO=%s",(data['uname']))
 
-            cursor.execute("UPDATE GENSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['gensec']))
-            cursor.execute("UPDATE SPORTSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['sportsec']))
+            for key in data.keys():
+                if key != 'token':
+                    cursor.execute("UPDATE CANDIDATES SET VOTES = VOTES + 1 WHERE ROLLNO=%s AND POSITION=%s",(data[key], key))
+
+            # cursor.execute("UPDATE GENSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['gensec']))
+            # cursor.execute("UPDATE SPORTSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['sportsec']))
 
             conn.commit()
             conn.close()
@@ -212,20 +216,30 @@ def upload_candidatefile():
       
 @app.route('/fetchcandidates', methods=['POST'])
 def fetch_candidates():
-    candidates = {'gensec': [], 'sportsec' : []}
+
+    candidates = {}
 
     conn = mysql.connect()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM GENSEC")
+    cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM CANDIDATES")
     res = cursor.fetchall()
     for cand in res:
-        candidates['gensec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
+        try:
+            candidates[cand[3]].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
+        except:
+            candidates[cand[3]] = []
+            candidates[cand[3]].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
 
-    cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM SPORTSEC")
-    res = cursor.fetchall()
-    for cand in res:
-        candidates['sportsec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
+    # cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM GENSEC")
+    # res = cursor.fetchall()
+    # for cand in res:
+    #     candidates['gensec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
+
+    # cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM SPORTSEC")
+    # res = cursor.fetchall()
+    # for cand in res:
+    #     candidates['sportsec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
 
     return Response(json.dumps(candidates), status=200, mimetype='application/json')
 
@@ -242,17 +256,21 @@ def fetch_results():
             resp = {'error': 'USER_NOT_AUTHORIZED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
 
-        results = {'gensec': [], 'sportsec' : []}
+        results = {}
 
-        cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG, VOTES  FROM GENSEC ORDER BY VOTES DESC")
+        cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG, VOTES  FROM CANDIDATES ORDER BY VOTES DESC")
         res = cursor.fetchall()
-        for cand in res:
-            results['gensec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4], 'votes': cand[5]})
 
-        cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG, VOTES FROM SPORTSEC ORDER BY VOTES DESC")
-        res = cursor.fetchall()
         for cand in res:
-            results['sportsec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4], 'votes': cand[5]})
+            try:
+                results[cand[3]].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4], 'votes': cand[5]})
+            except:
+                results[cand[3]] = []
+                results[cand[3]].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4], 'votes': cand[5]})
+        # cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG, VOTES FROM SPORTSEC ORDER BY VOTES DESC")
+        # res = cursor.fetchall()
+        # for cand in res:
+        #     results['sportsec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4], 'votes': cand[5]})
 
         return Response(json.dumps(results), status=200, mimetype='application/json')
     except:

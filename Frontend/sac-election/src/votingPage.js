@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 
 function VotingPage(props) {
     const { candidates, user, setLoggedIn } = props;
-    const [selected, setSelected] = useState({ 'gensec': null, 'sportsec': null });
+
+    const [selected, setSelected] = useState({});
 
     const onChange = event => {
         console.log(event.target);
@@ -28,7 +29,7 @@ function VotingPage(props) {
     }
 
     const castVote = () => {
-        if (selected['gensec'] !== null && selected['sportsec'] !== null) {
+        if (Object.keys(selected).length === Object.keys(candidates).length) {
 
             const data = { ...selected, ...user }
 
@@ -39,10 +40,10 @@ function VotingPage(props) {
             }).catch((err) => {
                 alert(err.response.data.error)
             })
+        } else {
+            alert('Select your choices for all positions')
         }
     }
-
-
 
     return (
         <div>
@@ -58,36 +59,23 @@ function VotingPage(props) {
                     </div>
                 </div>
             </nav>
-            <div>
-                <h3> General Secretary </h3>
-                <div class="card" style={{ width: '18rem' }}>
-                    <ul class="list-group list-group-flush">
-
-                        {candidates['gensec'].map((cand, ind) => (
-                            <div key={ind}>
-                                <li class="list-group-item"><input type="radio" id={cand['rollno']} name='gensec' value={cand['rollno']} onChange={onChange} />
-                                    <label for={cand['rollno']}>{cand['name'] + ' - [ ' + cand['program'] + ' ' + cand['dept'] + ' ]'}</label>
-                                </li>
-                            </div>
-                        ))}
-                    </ul>
+            {Object.keys(candidates).map((pos, ind) => (
+                <div key={ind}>
+                    <h3>{pos}</h3>
+                    <div class="card" style={{ width: '18rem' }}>
+                        <ul class="list-group list-group-flush">
+                            {candidates[pos].map((cand, ind) => (
+                                <div key={ind}>
+                                    <li class="list-group-item">
+                                        <input type="radio" id={cand['rollno']} name={pos} value={cand['rollno']} onChange={onChange} />
+                                        <label for={cand['rollno']}>{cand['name'] + ' - [ ' + cand['program'] + ' ' + cand['dept'] + ' ]'}</label>
+                                    </li>
+                                </div>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <h3> Sports Secretary </h3>
-                <div class="card" style={{ width: '18rem' }}>
-                    <ul class="list-group list-group-flush">
-                        {candidates['sportsec'].map((cand, ind) => (
-                            <div key={ind}>
-                                <li class="list-group-item">
-                                    <input type="radio" id={cand['rollno']} name='sportsec' value={cand['rollno']} onChange={onChange} />
-                                    <label for={cand['rollno']}>{cand['name'] + ' - [ ' + cand['program'] + ' ' + cand['dept'] + ' ]'}</label>
-                                </li>
-                            </div>
-                        ))}
-                    </ul>
-                </div>
-            </div>
+            ))}
             <div style={{ padding: '10px' }}>
                 <button class="btn btn-outline-primary" onClick={castVote}>Vote</button>
             </div>
