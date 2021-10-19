@@ -2,6 +2,7 @@ import './style/login.css';
 
 import axios from 'axios';
 import React, { useState } from 'react';
+import { url } from './config' ;
 
 function Login(props) {
 
@@ -33,7 +34,7 @@ function Login(props) {
 
     function handleClick() {
         setError("");
-        axios.post("http://localhost:1234/login", formData).then(res => {
+        axios.post(url+"/login", formData).then(res => {
             console.log(res);
             setUser({ uname: formData['uname'], token: res.data.token });
             loadCandidates()

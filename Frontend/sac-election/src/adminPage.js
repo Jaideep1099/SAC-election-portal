@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import VotersUploader from './votersUploader';
 import CandidateUploader from './candidateUploader';
 import axios from 'axios';
+import { url } from './config' ;
 
 function AdminPage(props) {
     const { user, setLoggedIn } = props;
@@ -9,7 +10,7 @@ function AdminPage(props) {
     const [result, setResult] = useState(null);
 
     function logout() {
-        axios.post("http://localhost:1234/logout", user).then((res) => {
+        axios.post(url+"/logout", user).then((res) => {
             setLoggedIn(false)
         }).catch((err) => {
             console.log(err);
@@ -17,7 +18,15 @@ function AdminPage(props) {
     }
 
     function fetchResults() {
-        axios.post("http://localhost:1234/fetchresults", user).then((res) => {
+        axios.post(url+"/fetchresults", user).then((res) => {
+            setResult(res.data)
+        }).catch((err) => {
+            console.log(err);
+        })
+    }
+
+    function toggleVote() {
+        axios.post(url+"/togglevoting", user).then((res) => {
             setResult(res.data)
         }).catch((err) => {
             console.log(err);
@@ -45,6 +54,7 @@ function AdminPage(props) {
                         <div class="navbar-nav">
                             <button class="btn btn-outline-primary" onClick={logout}> Logout </button>
                             <button class="btn btn-outline-primary" onClick={onClick}>{section === 'voters' ? "Candidate Upload" : "Voter Upload"}</button>
+                            <button class="btn btn-outline-primary" onClick={toggleVote}> Toggle Voting </button>
                         </div>
                     </div>
                 </div>

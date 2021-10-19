@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
+import { url } from './config' ;
 
 function VotingPage(props) {
     const { candidates, user, setLoggedIn } = props;
@@ -21,7 +22,7 @@ function VotingPage(props) {
     };
 
     function logout() {
-        axios.post("http://localhost:1234/logout", user).then((res) => {
+        axios.post(url+"/logout", user).then((res) => {
             setLoggedIn(false)
         }).catch((err) => {
             console.log(err);
@@ -33,7 +34,7 @@ function VotingPage(props) {
 
             const data = { ...selected, ...user }
 
-            axios.post("http://localhost:1234/castvote", data).then((res) => {
+            axios.post(url+"/castvote", data).then((res) => {
                 console.log(res);
                 alert("Your vote has been saved. You will be now logged out")
                 logout();

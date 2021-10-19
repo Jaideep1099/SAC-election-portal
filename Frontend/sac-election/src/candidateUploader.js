@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 import React, { useState } from 'react';
-
-
+import { url } from './config' ;
 
 function CandidateUploader(props) {
 
@@ -44,7 +43,7 @@ function CandidateUploader(props) {
 
         // Request made to the backend api
         // Send formData object
-        axios.post("http://localhost:1234/candidateuploader", formData).then((res) => {
+        axios.post(url+"/candidateuploader", formData).then((res) => {
             console.log(res);
             setStatus("Candidate list updated successfully !")
         }).catch((err) => {

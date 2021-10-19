@@ -3,6 +3,7 @@ import Login from "./login";
 import React, { useState } from 'react';
 import AdminPage from "./adminPage";
 import VotingPage from "./votingPage";
+import { url } from './config' ;
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -10,7 +11,7 @@ function App() {
   const [candidates, setCandidates] = useState(null)
 
   const loadCandidates = () => {
-    axios.post("http://localhost:1234/fetchcandidates").then((res) => {
+    axios.post(url+"/fetchcandidates").then((res) => {
       console.log(res);
       setCandidates({ ...res.data })
     }).catch((err) => {
