@@ -9,7 +9,7 @@ def enroll_voter(voterList, conn):
     passwordList = []
     for voter in voterList:
         pwd = str(random.randint(10000000, 99999999))
-        print(pwd)
+        # p_rint(pwd)
         passwordList.append([voter[1],pwd])
 
         hashed_pwd = hashlib.sha512(pwd.encode()).hexdigest()

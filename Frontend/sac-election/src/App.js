@@ -3,7 +3,7 @@ import Login from "./login";
 import React, { useState } from 'react';
 import AdminPage from "./adminPage";
 import VotingPage from "./votingPage";
-import { url } from './config' ;
+import url from './config' ;
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)

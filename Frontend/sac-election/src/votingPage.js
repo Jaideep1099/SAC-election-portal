@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
-import { url } from './config' ;
+import url from './config' ;
 
 function VotingPage(props) {
     const { candidates, user, setLoggedIn } = props;

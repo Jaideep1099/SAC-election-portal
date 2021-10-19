@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import VotersUploader from './votersUploader';
 import CandidateUploader from './candidateUploader';
 import axios from 'axios';
-import { url } from './config' ;
+import url from './config' ;
 
 function AdminPage(props) {
     const { user, setLoggedIn } = props;
     const [section, setSection] = useState('voters');
     const [result, setResult] = useState(null);
+    const [voting, setVoting] = useState(false);
 
     function logout() {
         axios.post(url+"/logout", user).then((res) => {
@@ -25,9 +26,18 @@ function AdminPage(props) {
         })
     }
 
+    function fetchVote() {
+        axios.post(url+"/getvotestatus", user).then((res) => {
+            setVoting(res.data.voting_started) ;
+            console.log(res.data.voting_started) ;
+        }).catch((err) => {
+            console.log(err);
+        })
+    }
+
     function toggleVote() {
         axios.post(url+"/togglevoting", user).then((res) => {
-            setResult(res.data)
+            fetchVote() ;
         }).catch((err) => {
             console.log(err);
         })
@@ -41,8 +51,8 @@ function AdminPage(props) {
             else
                 return 'voters';
         })
-
     }
+
     return (
         <div>
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -60,6 +70,8 @@ function AdminPage(props) {
                 </div>
             </nav>
             {section === 'voters' ? <VotersUploader user={user} /> : <CandidateUploader user={user} />}
+            <br /><br />
+            {voting === true ? <p> Started </p> : <p> Closed </p>}
             <br /><br />
             <button class="btn btn-primary btn-sm" onClick={fetchResults}> Show Results </button>
             {result === null ? null
@@ -97,6 +109,5 @@ function AdminPage(props) {
         </div >
     );
 }
-
 
 export default AdminPage;

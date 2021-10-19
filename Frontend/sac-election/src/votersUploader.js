@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import React, { useState } from 'react';
 
-import { url } from './config' ;
+import url from './config' ;
 
 function VotersUploader(props) {
     const { user } = props;
