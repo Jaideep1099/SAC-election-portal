@@ -25,6 +25,9 @@ mysql.init_app(app)
 cors = CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+# App Config
+voting_started = False
+
 def reset_db():
     sql_file = '../DB/sec_elec.sql'
     print(f"[INFO] Executing SQL script file: {sql_file}")
@@ -129,7 +132,7 @@ def logout():
 @app.route('/castvote', methods=['POST'])
 def cast_vote():
     data = json.loads(request.data)
-    print(data)    
+    print(data)
 
     try:
         conn = mysql.connect()
@@ -138,6 +141,11 @@ def cast_vote():
         if authenticate_user(cursor, data['uname'], data['token']) == False:
             conn.close()
             resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+
+        if not voting_started:
+            conn.close()
+            resp = {'error': 'VOTING_NOT_STARTED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
 
         cursor.execute("SELECT VOTED FROM USER WHERE ROLLNO=%s",(data['uname']))
@@ -165,6 +173,40 @@ def cast_vote():
     except:
         conn.close()
         resp = {'error': 'VOTE_FAILED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
+@app.route('/togglevoting', methods=['POST'])
+def toggle_voting():
+    data = json.loads(request.data)
+    print(data)
+
+    try:
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        voting_started = not voting_started
+    except Exception as e:
+        print(e)
+        resp = {'error': 'ERROR_OCCURED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
+@app.route('/getvotestatus', methods=['POST'])
+def get_vote_status():
+    data = json.loads(request.data)
+    print(data)
+
+    try:
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        resp = {'voting_started': voting_started}
+        return Response(json.dumps(resp), status=200, mimetype='application/json')
+    except Exception as e:
+        print(e)
+        resp = {'error': 'ERROR_OCCURED'}
         return Response(json.dumps(resp), status=401, mimetype='application/json')
 
 @app.route('/voteruploader', methods = ['POST'])
