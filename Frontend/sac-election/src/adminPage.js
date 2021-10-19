@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import VotersUploader from './votersUploader';
 import CandidateUploader from './candidateUploader';
 import axios from 'axios';
+import url from './config' ;
 
 function AdminPage(props) {
     const { user, setLoggedIn } = props;
     const [section, setSection] = useState('voters');
     const [result, setResult] = useState(null);
+    const [voting, setVoting] = useState(false);
 
     function logout() {
-        axios.post("http://localhost:1234/logout", user).then((res) => {
+        axios.post(url+"/logout", user).then((res) => {
             setLoggedIn(false)
         }).catch((err) => {
             console.log(err);
@@ -17,8 +19,25 @@ function AdminPage(props) {
     }
 
     function fetchResults() {
-        axios.post("http://localhost:1234/fetchresults", user).then((res) => {
+        axios.post(url+"/fetchresults", user).then((res) => {
             setResult(res.data)
+        }).catch((err) => {
+            console.log(err);
+        })
+    }
+
+    function fetchVote() {
+        axios.post(url+"/getvotestatus", user).then((res) => {
+            setVoting(res.data.voting_started) ;
+            console.log(res.data.voting_started) ;
+        }).catch((err) => {
+            console.log(err);
+        })
+    }
+
+    function toggleVote() {
+        axios.post(url+"/togglevoting", user).then((res) => {
+            fetchVote() ;
         }).catch((err) => {
             console.log(err);
         })
@@ -32,8 +51,8 @@ function AdminPage(props) {
             else
                 return 'voters';
         })
-
     }
+
     return (
         <div>
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -45,11 +64,14 @@ function AdminPage(props) {
                         <div class="navbar-nav">
                             <button class="btn btn-outline-primary" onClick={logout}> Logout </button>
                             <button class="btn btn-outline-primary" onClick={onClick}>{section === 'voters' ? "Candidate Upload" : "Voter Upload"}</button>
+                            <button class="btn btn-outline-primary" onClick={toggleVote}> Toggle Voting </button>
                         </div>
                     </div>
                 </div>
             </nav>
             {section === 'voters' ? <VotersUploader user={user} /> : <CandidateUploader user={user} />}
+            <br /><br />
+            {voting === true ? <p> Started </p> : <p> Closed </p>}
             <br /><br />
             <button class="btn btn-primary btn-sm" onClick={fetchResults}> Show Results </button>
             {result === null ? null
@@ -87,6 +109,5 @@ function AdminPage(props) {
         </div >
     );
 }
-
 
 export default AdminPage;

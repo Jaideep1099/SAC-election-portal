@@ -25,6 +25,9 @@ mysql.init_app(app)
 cors = CORS(app, origins=["http://localhost:3000"])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+# App Config
+voting_started = False
+
 def reset_db():
     sql_file = '../DB/sec_elec.sql'
     print(f"[INFO] Executing SQL script file: {sql_file}")
@@ -32,24 +35,24 @@ def reset_db():
 
     for line in open(sql_file):
         line = line.strip()
-        # print(f'[LINE] {line}')
-        # print('[--]',re.match(r'--', line))
+        # p_rint(f'[LINE] {line}')
+        # p_rint('[--]',re.match(r'--', line))
         if re.match(r'--', line):
             continue
-        # print('[/*/]',re.match(r'/*/', line))
+        # p_rint('[/*/]',re.match(r'/*/', line))
         if re.match(r'/', line):
             continue
-        # print('[HERE]')
+        # p_rint('[HERE]')
         if not re.search(r';', line):  # keep appending lines that don't end in ';'
             statement = statement + line
         else:  # when you get a line ending in ';' then exec statement and reset for next statement
             statement = statement + line
-            # print(f"[DEBUG] Executing SQL statement:\n{statement}")
+            # p_rint(f"[DEBUG] Executing SQL statement:\n{statement}")
             try:
                 cursor.execute(statement)
             except Exception as e:
-                # print(f"[ERROR] Failed to execute SQL statement:\n{statement}")
-                # print(f"[WARN] MySQLError during execute statement \n\tArgs: {str(e.args)}")
+                # p_rint(f"[ERROR] Failed to execute SQL statement:\n{statement}")
+                # p_rint(f"[WARN] MySQLError during execute statement \n\tArgs: {str(e.args)}")
                 pass
             statement = ""
 
@@ -69,7 +72,7 @@ if len(args) > 0 and args[0] == "reset_db":
 
 # cursor.execute("SELECT * from USER")
 # data = cursor.fetchone()
-# print(data)
+# p_rint(data)
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -87,7 +90,7 @@ def login():
     cursor.execute("SELECT COUNT(*) FROM USER WHERE ROLLNO = %s AND PWD = %s",(uname, hashed_pwd))
     res = cursor.fetchone()
     
-    # print(res)
+    # p_rint(res)
     
     if res[0] == 1:
         token = str(random.randint(100000, 999999)) + uname
@@ -111,7 +114,7 @@ def login():
 @app.route('/logout', methods=['POST'])
 def logout():
     data = json.loads(request.data)
-    print(data)
+    # p_rint(data)
 
     try:
         conn = mysql.connect()
@@ -129,7 +132,7 @@ def logout():
 @app.route('/castvote', methods=['POST'])
 def cast_vote():
     data = json.loads(request.data)
-    print(data)    
+    # p_rint(data)
 
     try:
         conn = mysql.connect()
@@ -138,6 +141,11 @@ def cast_vote():
         if authenticate_user(cursor, data['uname'], data['token']) == False:
             conn.close()
             resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+
+        if not voting_started:
+            conn.close()
+            resp = {'error': 'VOTING_NOT_STARTED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
 
         cursor.execute("SELECT VOTED FROM USER WHERE ROLLNO=%s",(data['uname']))
@@ -167,6 +175,49 @@ def cast_vote():
         resp = {'error': 'VOTE_FAILED'}
         return Response(json.dumps(resp), status=401, mimetype='application/json')
 
+@app.route('/togglevoting', methods=['POST'])
+def toggle_voting():
+    global voting_started
+
+    data = json.loads(request.data)
+
+    try:
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        conn.close()
+        voting_started = not voting_started
+        return Response("{'success': 'VOTING_TOGGLED'}", status=200, mimetype='application/json')
+    except Exception as e:
+        print(e)
+        resp = {'error': 'ERROR_OCCURED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
+@app.route('/getvotestatus', methods=['POST'])
+def get_vote_status():
+    data = json.loads(request.data)
+    # p_rint(data)
+
+    try:
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        conn.close()
+        resp = {'voting_started': voting_started}
+        return Response(json.dumps(resp), status=200, mimetype='application/json')
+    except Exception as e:
+        print(e)
+        resp = {'error': 'ERROR_OCCURED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
 @app.route('/voteruploader', methods = ['POST'])
 def upload_voterfile():
 
@@ -194,10 +245,10 @@ def upload_candidatefile():
     
     formData = str(request.form.to_dict())
 
-    print(formData)
+    # p_rint(formData)
     # uname = formData.uname
     # token = formData.token
-    #print(uname, token)
+    # p_rint(uname, token)
     try:    
         f = request.files['file']
         f.save('candidateList.xlsx')

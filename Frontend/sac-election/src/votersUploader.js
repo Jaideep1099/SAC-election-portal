@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import React, { useState } from 'react';
 
-
+import url from './config' ;
 
 function VotersUploader(props) {
     const { user } = props;
@@ -41,7 +41,7 @@ function VotersUploader(props) {
 
         // Request made to the backend api
         // Send formData object
-        axios.post("http://localhost:1234/voteruploader", formData).then((res) => {
+        axios.post(url+"/voteruploader", formData).then((res) => {
             console.log(res);
             setStatus("VoterList updated successfully !")
         }).catch((err) => {

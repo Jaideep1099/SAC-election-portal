@@ -1,7 +1,7 @@
 A portal for SAC election
 
 Frontend : ReactJS
-Backend  : Pyrthon-Flask
+Backend  : Python-Flask
 Database : mysql-server
 
 requirements.txt has the requirements for backend python code
