@@ -36,6 +36,7 @@ function CandidateUploader(props) {
             selectedFile.name,
         );
 
+        formData.append("uname", user.uname);
         formData.append('token',user.token);
 
         // Details of the uploaded file
@@ -48,6 +49,7 @@ function CandidateUploader(props) {
             setStatus("Candidate list updated successfully !")
         }).catch((err) => {
             console.log(err);
+            alert(err.response.data.error);
             setStatus("File upload failed !")
         })
 

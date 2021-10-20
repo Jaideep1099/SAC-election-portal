@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, Response
 from flaskext.mysql import MySQL
 from flask_cors import CORS
 
+from pymysql.err import IntegrityError
+
 import pandas as pd
 import numpy as np
 import random
@@ -89,14 +91,12 @@ def login():
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM USER WHERE ROLLNO = %s AND PWD = %s",(uname, hashed_pwd))
     res = cursor.fetchone()
-    
     # p_rint(res)
     
     if res[0] == 1:
         token = str(random.randint(100000, 999999)) + uname
         token = hashlib.sha512(token.encode()).hexdigest()
         cursor = conn.cursor()
-        
         try:
             cursor.execute("INSERT INTO SESSION (ROLLNO, TOKEN) VALUES (%s,%s)",(uname, token))
             conn.commit()
@@ -106,7 +106,6 @@ def login():
         except:
             conn.close()
             return Response("{'error': 'USER_SESSION_ACTIVE'}", status=401, mimetype='application/json')
-
     else:
         conn.close()
         return Response("{'error': 'LOGIN_FAILED'}", status=401, mimetype='application/json')
@@ -137,31 +136,23 @@ def cast_vote():
     try:
         conn = mysql.connect()
         cursor = conn.cursor()
-
         if authenticate_user(cursor, data['uname'], data['token']) == False:
             conn.close()
             resp = {'error': 'USER_NOT_AUTHORIZED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
-
         if not voting_started:
             conn.close()
             resp = {'error': 'VOTING_NOT_STARTED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
-
         cursor.execute("SELECT VOTED FROM USER WHERE ROLLNO=%s",(data['uname']))
         res = cursor.fetchone()
-
         if res[0] == 0:
-
             cursor.execute("UPDATE USER SET VOTED = 1 WHERE ROLLNO=%s",(data['uname']))
-
             for key in data.keys():
                 if key != 'token':
                     cursor.execute("UPDATE CANDIDATES SET VOTES = VOTES + 1 WHERE ROLLNO=%s AND POSITION=%s",(data[key], key))
-
             # cursor.execute("UPDATE GENSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['gensec']))
             # cursor.execute("UPDATE SPORTSEC SET VOTES = VOTES + 1 WHERE ROLLNO=%s",(data['sportsec']))
-
             conn.commit()
             conn.close()
             resp = {'success': 'VOTE_COMPLETE'}
@@ -169,7 +160,6 @@ def cast_vote():
         else:
             resp = {"error": "ALREADY_VOTED"}
             return Response(json.dumps(resp), status=403, mimetype='application/json')
-    
     except:
         conn.close()
         resp = {'error': 'VOTE_FAILED'}
@@ -178,9 +168,7 @@ def cast_vote():
 @app.route('/togglevoting', methods=['POST'])
 def toggle_voting():
     global voting_started
-
     data = json.loads(request.data)
-
     try:
         conn = mysql.connect()
         cursor = conn.cursor()
@@ -202,7 +190,6 @@ def toggle_voting():
 def get_vote_status():
     data = json.loads(request.data)
     # p_rint(data)
-
     try:
         conn = mysql.connect()
         cursor = conn.cursor()
@@ -220,54 +207,147 @@ def get_vote_status():
 
 @app.route('/voteruploader', methods = ['POST'])
 def upload_voterfile():
+    data = request.form.to_dict()
 
     try:
-       
-       f = request.files['file']
-       f.save('voterList.xlsx')
-       
-       voterList = np.array(pd.read_excel('voterList.xlsx'))
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
 
-       conn = mysql.connect()
-       enroll_voter(voterList,conn)
-       conn.close()
+        res = cursor.execute("SELECT COUNT(*) FROM USER")
+        res = cursor.fetchone()[0]
+        if res > 1 :
+            conn.close()
+            resp = {'error': 'VOTERS_LIST_ALREADY_UPLOADED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
 
-       resp = {'success':'OK'}
-       return Response(json.dumps(resp), status=201, mimetype='application/json')
+        f = request.files['file']
+        f.save('voterList.xlsx')
+        voterList = np.array(pd.read_excel('voterList.xlsx'))
+
+        enroll_voter(voterList,conn)
+        conn.close()
+
+        resp = {'success':'OK'}
+        return Response(json.dumps(resp), status=201, mimetype='application/json')
        
-    except:
+    except Exception as e:
+        print(e)
         conn.close()
         resp = {'error': 'FILE_UPLOAD_ERROR'}
         return Response(json.dumps(resp), status=500, mimetype='application/json')
-    
+
+@app.route('/deletevoters', methods = ['POST'])
+def delete_voters():
+    data = json.loads(request.data)
+    try :
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        res = cursor.execute("DELETE FROM USER WHERE ROLLNO!='admin'")
+        if res == 0:
+            conn.close()
+            resp = {'error': 'NO_VOTERS_TO_DELETE'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        else :
+            conn.commit()
+            conn.close()
+            resp = {'success': 'VOTERS_DELETED'}
+            return Response(json.dumps(resp), status=200, mimetype='application/json')
+    except Exception as e:
+        raise
+        resp = {'error': 'ERROR_OCCURED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
 @app.route('/candidateuploader', methods = ['POST'])
 def upload_candidatefile():
-    
     formData = str(request.form.to_dict())
-
-    # p_rint(formData)
-    # uname = formData.uname
-    # token = formData.token
-    # p_rint(uname, token)
+    data = request.form.to_dict()
     try:    
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        
+        res = cursor.execute("SELECT COUNT(*) FROM CANDIDATES")
+        res = cursor.fetchone()[0]
+        if res > 0 :
+            conn.close()
+            resp = {'error': 'CANDIDATES_LIST_ALREADY_UPLOADED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+
         f = request.files['file']
         f.save('candidateList.xlsx')
        
         candidateList = np.array(pd.read_excel('candidateList.xlsx'))
 
-        conn = mysql.connect()
         enroll_candidate(candidateList,conn)
         conn.close()
+
         resp = {'success':'OK'}
         return Response(json.dumps(resp), status=201, mimetype='application/json')
-       
-    except:
+    
+    except IntegrityError as e:
+        conn.close()
+        resp = {'error': 'UPLOAD_VOTERS_FIRST'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+    except Exception as e:
+        print(f'[!] Error : {type(e)}')
+        print(f'[!] Error : {e}')
         resp = {'error': 'FILE_UPLOAD_ERROR'}
         return Response(json.dumps(resp), status=500, mimetype='application/json')
-      
+
+@app.route('/deletecandidates', methods = ['POST'])
+def delete_candidates():
+    data = json.loads(request.data)
+    try :
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if authenticate_user(cursor, data['uname'], data['token']) == False:
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        if not data['uname'] == 'admin' :
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        res = cursor.execute("DELETE FROM CANDIDATES")
+        if res == 0:
+            conn.close()
+            resp = {'error': 'NO_CANDIDATES_TO_DELETE'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        else :
+            conn.commit()
+            conn.close()
+            resp = {'success': 'CANDIDATES_DELETED'}
+            return Response(json.dumps(resp), status=200, mimetype='application/json')
+    except Exception as e:
+        print(e)
+        resp = {'error': 'ERROR_OCCURED'}
+        return Response(json.dumps(resp), status=401, mimetype='application/json')
+
 @app.route('/fetchcandidates', methods=['POST'])
 def fetch_candidates():
-
     candidates = {}
 
     conn = mysql.connect()
@@ -281,16 +361,6 @@ def fetch_candidates():
         except:
             candidates[cand[3]] = []
             candidates[cand[3]].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
-
-    # cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM GENSEC")
-    # res = cursor.fetchall()
-    # for cand in res:
-    #     candidates['gensec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
-
-    # cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG FROM SPORTSEC")
-    # res = cursor.fetchall()
-    # for cand in res:
-    #     candidates['sportsec'].append({'rollno': cand[0],'name':cand[1], 'dept':cand[2], 'position':cand[3], 'program':cand[4]})
 
     return Response(json.dumps(candidates), status=200, mimetype='application/json')
 
@@ -306,7 +376,11 @@ def fetch_results():
             conn.close()
             resp = {'error': 'USER_NOT_AUTHORIZED'}
             return Response(json.dumps(resp), status=401, mimetype='application/json')
-
+        if not data['uname'] == 'admin' :
+            conn.close()
+            resp = {'error': 'USER_NOT_AUTHORIZED'}
+            return Response(json.dumps(resp), status=401, mimetype='application/json')
+        
         results = {}
 
         cursor.execute("SELECT ROLLNO, NAME, DEPT, POSITION, PROG, VOTES  FROM CANDIDATES ORDER BY VOTES DESC")
