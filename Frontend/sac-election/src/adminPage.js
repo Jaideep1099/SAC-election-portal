@@ -39,6 +39,24 @@ function AdminPage(props) {
         })
     }
 
+    function deleteVoters() {
+        axios.post(url + "/deletevoters", user).then((res) => {
+            alert("Voters deleted successfully");
+        }).catch((err) => {
+            alert(err.response.data.error);
+            console.log(err);
+        })
+    }
+
+    function deleteCandidates() {
+        axios.post(url + "/deletecandidates", user).then((res) => {
+            alert("Candidates deleted");
+        }).catch((err) => {
+            alert(err.response.data.error);
+            console.log(err);
+        })
+    }
+
     function toggleVote() {
         axios.post(url + "/togglevoting", user).then((res) => {
             fetchVote();
@@ -69,6 +87,7 @@ function AdminPage(props) {
                             <button class="btn btn-outline-primary" onClick={logout}> Logout </button>
                             <button class="btn btn-outline-primary" onClick={onClick}>{section === 'voters' ? "Candidate Upload" : "Voter Upload"}</button>
                             <button class="btn btn-outline-primary" onClick={toggleVote}> Toggle Voting </button>
+                            {section === 'voters' ? <button class="btn btn-outline-primary" onClick={deleteVoters}> Delete Voters </button> : <button class="btn btn-outline-primary" onClick={deleteCandidates}> Delete Candidates </button>}
                         </div>
                     </div>
                 </div>

@@ -36,8 +36,13 @@ function VotersUploader(props) {
             selectedFile.name
         );
 
+        formData.append("uname", user.uname);
+        formData.append("token", user.token);
+        // console.log(user);
+
+
         // Details of the uploaded file
-        console.log(selectedFile);
+        // console.log(selectedFile);
 
         // Request made to the backend api
         // Send formData object
